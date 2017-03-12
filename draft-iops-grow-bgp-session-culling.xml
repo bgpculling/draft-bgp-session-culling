@@ -208,42 +208,67 @@
     Example for an IXP with IPv4 subnet 192.0.2.0/24 and IPv6 subnet 2001:db8:2::/64 on the Peering LAN
 </preamble>
 <artwork><![CDATA[
-entry DenyBGPv4egress {
-  if {
-    source-address 192.0.2.0/24;
-    protocol tcp;
-    source-port 179;
-  } then {
-    deny;
-  }
-}
-entry DenyBGPv4ingress {
-  if {
-    source-address 192.0.2.0/24;
-    protocol tcp;
-    destination-port 179;
-  } then {
-    deny;
-  }
-}
-entry DenyBGPv6egress {
-  if {
-    source-address 2001:db8:2::/64;
-    protocol tcp;
-    source-port 179;
-  } then {
-    deny;
-  }
-}
-entry DenyBGPv6ingress {
-  if {
-    source-address 2001:db8:2::/64;
-    protocol tcp;
-    destination-port 179;
-  } then {
-    deny;
-  }
-}
+        filter bgp_cull {
+            term egress {
+                from {
+                    source-port 179;
+                    ip-source-address {
+                        192.0.2.0/24;
+                    }
+                }
+                then {
+                    count bgp_cull;
+                    discard;
+                }
+            }
+            term ingress {
+                from {
+                    destination-port 179;
+                    ip-source-address {
+                        192.0.2.0/24;
+                    }
+                }
+                then {
+                    count bgp_cull;
+                    discard;
+                }
+            }
+            term egress6 {
+                from {
+                    source-port 179;
+                    ip-version {
+                        ipv6 {
+                            ip6-source-address {
+                                2001:db8:2::/64;
+                            }
+                        }
+                    }
+                }
+                then {
+                    count bgp_cull;
+                    discard;
+                }
+            }
+            term ingress6 {
+                from {
+                    destination-port 179;
+                    ip-version {
+                        ipv6 {
+                            ip6-source-address {
+                                2001:db8:2::/64;
+                            }
+                        }
+                    }
+                }
+                then {
+                    count bgp_cull;
+                    discard;
+                }
+            }
+            term rest {
+                then accept;
+            }
+        }
 ]]></artwork>
 </figure>
 </section>
